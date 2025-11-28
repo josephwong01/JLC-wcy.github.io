@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8" />
+<title>动态日历表格</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; }
+  table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+  th, td { border: 1px solid #ccc; padding: 10px; text-align: center; min-width:80px; }
+  th { background-color: #f0f0f0; }
+  .green { color: #2a8c2a; font-weight: bold; }
+  .orange { color: #e67e22; font-weight: bold; }
+  .blue { color: #2980b9; font-weight: bold; }
+  .red { color: #c0392b; font-weight: bold; }
+  .version-label { font-weight: bold; padding-left: 10px; }
+</style>
+</head>
+<body>
+
+<h2>动态周历表格（可根据日期变化）</h2>
+<label>选择基准日期： </label>
+<input type="date" id="baseDate" />
+<button onclick="renderTable()">生成表格</button>
+
+<div id="tableContainer"></div>
+
+<script>
+function startOfWeek(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = (day === 0) ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+function daysBetween(a, b) {
+  const msPerWeek = 7 * 24 * 3600 * 1000;
+  return Math.round((a - b) / msPerWeek);
+}
+
+function renderTable() {
+  const baseDateInput = document.getElementById('baseDate').value;
+  if (!baseDateInput) {
+    alert('请选择日期');
+    return;
+  }
+
+  const baseDate = new Date(baseDateInput);
+
+  const referenceMonday = new Date(2025, 10, 3);
+  const refMon = startOfWeek(referenceMonday);
+
+  const centerMonday = startOfWeek(baseDate);
+  const weeks = [];
+  for (let w = -2; w <= 4; w++) {
+    const monday = new Date(centerMonday);
+    monday.setDate(monday.getDate() + w * 7);
+    const week = [];
+    for (let d = 0; d < 5; d++) {
+      const cellDate = new Date(monday);
+      cellDate.setDate(monday.getDate() + d);
+      week.push(cellDate);
+    }
+    weeks.push({ monday, days: week });
+  }
+
+  let html = '<table><tr><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th><th>版本</th></tr>';
+
+  weeks.forEach((weekObj, idx) => {
+    const weekMonday = weekObj.monday;
+    const weekOffset = daysBetween(weekMonday, refMon);
+    const doubleWeekIndex = Math.floor(weekOffset / 2);
+    const isFirstWeekOfDouble = (weekOffset % 2 === 0);
+
+    html += '<tr>';
+    weekObj.days.forEach((date) => {
+      const mmdd = (date.getMonth()+1).toString().padStart(2,'0') + '.' + date.getDate().toString().padStart(2,'0');
+
+      let td = '';
+      const dow = date.getDay();
+      const secondWeek = !isFirstWeekOfDouble;
+
+      if (dow === 1 && isFirstWeekOfDouble) {
+        td = `<td class="green">${mmdd}</td>`;
+      } else if (dow === 2) {
+        td = `<td class="orange">${mmdd}</td>`;
+      } else if (dow === 4 && isFirstWeekOfDouble) {
+        td = `<td class="blue">${mmdd}</td>`;
+      } else if (dow === 1 && secondWeek) {
+        td = `<td style="background:#d14b7a;color:white;font-weight:bold;">${mmdd}</td>`;
+      } else if (dow === 3 && secondWeek) {
+        td = `<td style="background:#6e4b9e;color:white;font-weight:bold;">${mmdd}</td>`;
+      } else if (dow === 4 && secondWeek) {
+        td = `<td style="background:#6e4b9e;color:white;font-weight:bold;"></td>`;
+      } else if (dow === 5 && secondWeek) {
+        td = `<td class="red">${mmdd}</td>`;
+      } else {
+        td = `<td>${mmdd}</td>`;
+      }
+
+      html += td;
+    });
+
+    const versionNumber = 213 + Math.floor(daysBetween(weekMonday, refMon) / 2);
+
+    if (isFirstWeekOfDouble) {
+      html += `<td class="version-label" rowspan="2">${versionNumber}版本</td>`;
+    }
+
+    html += '</tr>';
+  });
+
+  html += '</table>';
+  document.getElementById('tableContainer').innerHTML = html;
+}
+</script>
+
+</body>
+</html>
