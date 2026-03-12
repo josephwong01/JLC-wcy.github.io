@@ -48,7 +48,7 @@ function renderTable() {
 
   const baseDate = new Date(baseDateInput);
 
-  const referenceMonday = new Date(2025, 10, 3);
+  const referenceMonday = new Date(2026, 2, 2);
   const refMon = startOfWeek(referenceMonday);
 
   const centerMonday = startOfWeek(baseDate);
@@ -102,7 +102,7 @@ function renderTable() {
       html += td;
     });
 
-    const versionNumber = 213 + Math.floor(daysBetween(weekMonday, refMon) / 2);
+    const versionNumber = 220 + Math.floor(daysBetween(weekMonday, refMon) / 2);
 
     if (isFirstWeekOfDouble) {
       html += `<td class="version-label" rowspan="2">${versionNumber}版本</td>`;
